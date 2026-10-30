@@ -159,12 +159,18 @@
   const horariosDe = (m) => (m.horarios && m.horarios.length ? m.horarios : [{ dia: m.dia || 'Lunes', hora: m.hora || '08:00' }]);
 
   // ---------- Cálculos ----------
-  function pesos(n) {
-    return { 2: [50, 50], 3: [30, 30, 40], 4: [25, 25, 25, 25] }[n] || [30, 30, 40];
+  // Porcentajes por defecto según el número de periodos (cortes)
+  function pesosBase(n) {
+    if (n === 3) return [30, 30, 40];
+    const base = Math.floor(100 / n), w = Array(n).fill(base);
+    w[n - 1] += 100 - base * n;
+    return w;
   }
+  // Porcentajes de una materia: los que escribió la persona o los de por defecto
+  const pesosDe = (n) => (Array.isArray(n.pesos) && n.pesos.length === n.periodos ? n.pesos : pesosBase(n.periodos));
   function promedioMateria(id) {
     const n = data().notas[id]; if (!n) return null;
-    const w = pesos(n.periodos);
+    const w = pesosDe(n);
     let s = 0, ws = 0;
     (n.notas || []).forEach((v, i) => {
       const x = parseFloat(String(v).replace(',', '.'));
@@ -918,34 +924,56 @@
     const m = data().materias.find((x) => x.id === id);
     if (!m) return views.simulador();
     const n = data().notas[id] || (data().notas[id] = { periodos: 3, notas: [] });
-    const w = pesos(n.periodos);
+    const w = pesosDe(n);
+    const total = () => w.reduce((a, b) => a + (Number(b) || 0), 0);
     return {
       html: `<div class="screen with-nav">
         ${topbar('Simulador de notas', '/simulador')}
-        <h2 style="font-family:Nunito,sans-serif;font-size:17px;margin:0 0 12px">${esc(m.nombre)}</h2>
+        <h2 style="font-family:Nunito,sans-serif;font-size:var(--fs-m);margin:0 0 12px">${esc(m.nombre)}</h2>
         <div class="card">
           <div class="sim-head"><div class="ic">${ic('shield')}</div><h2>Calificaciones</h2></div>
-          <p style="font-size:14px">Se muestra la nota que debes obtener en el último período para aprobar la asignatura (3.0).</p>
+          <p>Escribe el porcentaje de cada corte y tus notas. Se muestra la nota que debes obtener en el último período para aprobar la asignatura (3.0).</p>
           <div style="display:flex;align-items:center;gap:12px;margin:8px 0 12px">${ic('cal').replace('<svg', '<svg style="width:26px;height:26px;color:var(--sage)"')}
             <select class="select" id="per" style="width:auto;border:0;padding-left:4px;font-weight:600">
-              ${[2, 3, 4].map((k) => `<option value="${k}" ${k === n.periodos ? 'selected' : ''}>Períodos: ${k}</option>`).join('')}</select></div>
-          ${w.map((p, i) => i < w.length - 1
-            ? `<div class="per"><span class="n">Periodo ${i + 1}</span><small>${p}%</small><input inputmode="decimal" data-i="${i}" placeholder="0.0" value="${esc(n.notas[i] || '')}" aria-label="Nota periodo ${i + 1}"></div>`
-            : `<div class="per last"><span class="n">Periodo ${i + 1}</span><b style="color:var(--primary)">${p}%</b></div>`).join('')}
+              ${[2, 3, 4, 5, 6].map((k) => `<option value="${k}" ${k === n.periodos ? 'selected' : ''}>Períodos: ${k}</option>`).join('')}</select></div>
+          <div class="per per-head"><span class="n"></span><small>%</small><small>Nota</small></div>
+          ${w.map((p, i) => `<div class="per ${i === w.length - 1 ? 'last' : ''}">
+              <span class="n">Periodo ${i + 1}</span>
+              <input inputmode="numeric" data-p="${i}" value="${esc(p)}" aria-label="Porcentaje periodo ${i + 1}">
+              ${i < w.length - 1
+                ? `<input inputmode="decimal" data-i="${i}" placeholder="0.0" value="${esc(n.notas[i] || '')}" aria-label="Nota periodo ${i + 1}">`
+                : '<b class="falta">?</b>'}
+            </div>`).join('')}
+          <div class="per-total" id="total"></div>
           <button class="sim-ask" id="ask">${ic('arrowR').replace('<svg', '<svg style="width:24px;height:24px"')} Preguntar</button>
         </div>
         <div class="card mt">
           <div class="sim-head"><div class="ic">${ic('arrows')}</div><h2>Tu situación</h2></div>
           <div class="situ" id="situ">Digita tus notas<br>y pregúntame tu situación</div>
-          <button class="sim-ask" id="editar">${ic('edit').replace('<svg', '<svg style="width:22px;height:22px"')} Editar</button>
         </div>
       </div>${nav('simulador')}`,
       mount(root) {
-        $('#per', root).onchange = (e) => { n.periodos = Number(e.target.value); n.notas = n.notas.slice(0, n.periodos - 1); save(); render(); };
+        const showTotal = () => {
+          const t = total(), el = $('#total', root);
+          el.textContent = `Total: ${t}%${t === 100 ? '' : ' (debe sumar 100%)'}`;
+          el.classList.toggle('bad', t !== 100);
+        };
+        showTotal();
+        $('#per', root).onchange = (e) => {
+          n.periodos = Number(e.target.value);
+          n.pesos = pesosBase(n.periodos);
+          n.notas = n.notas.slice(0, n.periodos - 1);
+          save(); render();
+        };
+        $$('[data-p]', root).forEach((inp) => (inp.oninput = () => {
+          w[Number(inp.dataset.p)] = Number(inp.value.replace(',', '.')) || 0;
+          n.pesos = w.slice(); save(); showTotal();
+        }));
         $$('[data-i]', root).forEach((inp) => (inp.oninput = () => { n.notas[Number(inp.dataset.i)] = inp.value.trim(); save(); }));
-        $('#editar', root).onclick = () => { const f = $('[data-i]', root); if (f) f.focus(); };
         $('#ask', root).onclick = () => {
           const out = $('#situ', root);
+          if (total() !== 100) { out.innerHTML = `Los porcentajes suman ${total()}%.<br>Ajústalos para que sumen 100%.`; return; }
+          if (!w[w.length - 1]) { out.innerHTML = `El último periodo debe tener<br>un porcentaje mayor a 0%.`; return; }
           let acum = 0;
           for (let i = 0; i < w.length - 1; i++) {
             const x = parseFloat(String(n.notas[i] || '').replace(',', '.'));

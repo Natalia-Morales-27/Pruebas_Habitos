@@ -293,6 +293,13 @@ h1, h2, h3 { font-family: 'Lora', Georgia, serif; color: var(--primary); margin:
 .per input { width: 64px; border: var(--bw) solid var(--line); border-radius: 999px; background: none; padding: 6px 8px; text-align: center; }
 .per small { color: var(--muted); }
 .per.last .n { color: var(--primary); }
+.per input[data-p] { width: 58px; }
+.per .falta { width: 64px; text-align: center; color: var(--primary); }
+.per-head { border-top: 0; padding-bottom: 0; }
+.per-head small { width: 64px; text-align: center; }
+.per-head small:nth-of-type(1) { width: 58px; }
+.per-total { text-align: right; font-size: var(--fs-s); color: var(--muted); padding: 6px 10px 10px; border-top: var(--bw) solid var(--line); }
+.per-total.bad { color: #B3261E; font-weight: 700; }
 .sim-ask { display: flex; align-items: center; gap: 14px; border: 0; border-top: var(--bw) solid var(--line); width: 100%; background: none; padding: 14px 10px 0; font-size: var(--fs-m); }
 .situ { text-align: center; color: var(--primary); font-weight: 700; padding: 18px 8px; line-height: 1.5; }
 .situ .num { font-size: 40px; font-family: 'Lora', serif; display: block; }
