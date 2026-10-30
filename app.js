@@ -392,6 +392,7 @@
     const progreso = d.materias.map((m) => `<div class="progress-item">
         <div class="pl"><span>${esc(m.nombre)}</span><span>${progresoMateria(m.id)}%</span></div>
         <div class="bar"><i style="width:${progresoMateria(m.id)}%"></i></div></div>`).join('');
+    const pend = d.tareas.filter((t) => !t.hecha).length;
     return {
       html: `<div class="screen with-nav">
         <div class="home-head">
@@ -406,6 +407,8 @@
             <p>${prom === null ? 'Aún no tienes notas registradas' : prom >= 3 ? '¡Vas aprobando, sigue así!' : '¡Tú puedes subir esa nota!'}</p></div>
           <div class="card stat" data-go="/materias" role="button"><h3># Materias</h3>
             <div class="big">${d.materias.length}</div><p>${d.materias.length ? '¡Wow, eres increíble!' : 'Agrega tu primera materia'}</p></div>
+          <div class="card stat" data-go="/tareas" role="button"><h3>Tareas</h3>
+            <div class="big">${pend}</div><p>${pend ? 'Pendientes por hacer' : '¡Todo al día!'}</p></div>
         </div>
         <div class="card mt">
           <h2 class="section-title">Progreso</h2>

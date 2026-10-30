@@ -112,7 +112,8 @@ h1, h2, h3 { font-family: 'Lora', Georgia, serif; color: var(--primary); margin:
 .card { border: 1.5px solid var(--line); border-radius: var(--radius); padding: 18px 20px; background: var(--bg); }
 .stat-row { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 0 20px 4px; }
 .stat-row::-webkit-scrollbar { display: none; }
-.stat { min-width: 160px; flex: 1; }
+.stat { min-width: 150px; flex: 1; }
+.stat-row .stat:last-child { margin-right: 20px; }
 .stat h3 { font-size: 16px; }
 .stat .big { font-size: 34px; color: var(--primary); margin: 8px 0 6px; }
 .stat .big small { font-size: 16px; }
