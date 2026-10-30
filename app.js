@@ -269,13 +269,19 @@
     { nombre: 'Laura Gómez', email: 'laura.gomez@correo.com', color: '#B07A3B' },
   ];
   function googleDemo() {
+    // Cuentas de prueba + las cuentas que se registraron en este navegador
+    const colores = ['#5D0D18', '#7E8F89', '#B07A3B', '#4A6FA5', '#6B4E8A'];
+    const propias = Object.values(db.users)
+      .filter((u) => !CUENTAS_PRUEBA.some((c) => c.email === u.email))
+      .map((u, i) => ({ nombre: u.nombre, email: u.email, color: colores[(i + 3) % colores.length] }));
+    const cuentas = [...propias, ...CUENTAS_PRUEBA];
     const o = $('#overlay-root');
     o.innerHTML = `<div class="scrim bottom"><div class="sheet g-sheet" role="dialog" aria-modal="true">
       <div class="grip"></div>
       <div class="g-logo"><b style="color:#4285F4">G</b><b style="color:#EA4335">o</b><b style="color:#FBBC05">o</b><b style="color:#4285F4">g</b><b style="color:#34A853">l</b><b style="color:#EA4335">e</b></div>
       <h2>Elige una cuenta</h2>
       <p class="center hint" style="margin:-4px 0 8px">para continuar a Hábitos de Estudio</p>
-      ${CUENTAS_PRUEBA.map((c, i) => `<button data-acc="${i}"><span class="g-av" style="background:${c.color}">${esc(c.nombre[0])}</span>
+      ${cuentas.map((c, i) => `<button data-acc="${i}"><span class="g-av" style="background:${c.color}">${esc(c.nombre[0])}</span>
         <span><b>${esc(c.nombre)}</b><br><small>${esc(c.email)}</small></span></button>`).join('')}
       <button data-acc="cancel">Cancelar</button>
     </div></div>`;
@@ -284,7 +290,7 @@
       if (!b && !e.target.classList.contains('scrim')) return;
       closeOverlay();
       if (!b || b.dataset.acc === 'cancel') return;
-      const c = CUENTAS_PRUEBA[Number(b.dataset.acc)];
+      const c = cuentas[Number(b.dataset.acc)];
       if (!db.users[c.email]) db.users[c.email] = { nombre: c.nombre, email: c.email, pass: 'prueba123', foto: null, google: true, data: seedData() };
       db.session = c.email; save(); touchStreak();
       go('/inicio', `¡Hola, ${c.nombre.split(" ")[0]}!`);
@@ -960,9 +966,11 @@
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
     // Cuando se publica una versión nueva, recarga una vez para mostrarla.
+    // (En la primera visita no hay versión anterior, así que no recarga.)
+    const habiaVersion = !!navigator.serviceWorker.controller;
     let recargado = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (recargado || !navigator.serviceWorker.controller) return;
+      if (recargado || !habiaVersion) return;
       recargado = true; location.reload();
     });
   }
