@@ -132,6 +132,9 @@ h1, h2, h3 { font-family: 'Lora', Georgia, serif; color: var(--primary); margin:
 .card { border: var(--bw) solid var(--line); border-radius: var(--radius); padding: var(--pad-s) var(--pad); background: var(--bg); }
 .stat-row { display: flex; gap: var(--gap); overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad) 4px; }
 .stat-row::-webkit-scrollbar { display: none; }
+.stat-row { cursor: grab; user-select: none; scroll-behavior: auto; }
+.stat-row.dragging { cursor: grabbing; }
+.stat-row .stat { -webkit-user-drag: none; }
 .stat { min-width: 150px; flex: 1; }
 .stat-row .stat:last-child { margin-right: var(--pad); }
 .stat h3 { font-size: var(--fs-m); }

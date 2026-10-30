@@ -231,6 +231,31 @@
     $$('[data-pomo-phase]').forEach((el) => (el.textContent = pomo.fase));
   }
 
+  // Permite deslizar una fila horizontal arrastrando con el mouse (en el computador)
+  function dragScroll(el) {
+    if (!el) return;
+    let down = false, startX = 0, startLeft = 0, moved = false;
+    el.addEventListener('mousedown', (e) => {
+      down = true; moved = false; startX = e.pageX; startLeft = el.scrollLeft;
+      el.classList.add('dragging');
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!down) return;
+      const dx = e.pageX - startX;
+      if (Math.abs(dx) > 5) moved = true;
+      el.scrollLeft = startLeft - dx;
+    });
+    window.addEventListener('mouseup', () => { down = false; el.classList.remove('dragging'); });
+    // Si se arrastró, no se abre la tarjeta al soltar
+    el.addEventListener('click', (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+    // La rueda del mouse también la mueve hacia el costado
+    el.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      const max = el.scrollWidth - el.clientWidth;
+      if ((e.deltaY > 0 && el.scrollLeft < max) || (e.deltaY < 0 && el.scrollLeft > 0)) { e.preventDefault(); el.scrollLeft += e.deltaY; }
+    }, { passive: false });
+  }
+
   // =====================================================================
   // PANTALLAS
   // =====================================================================
@@ -441,6 +466,7 @@
       </div>${nav('inicio')}`,
       mount(root) {
         bindPomo(root);
+        dragScroll($('.stat-row', root));
         $('#menu', root).onclick = openDrawer;
       },
     };
