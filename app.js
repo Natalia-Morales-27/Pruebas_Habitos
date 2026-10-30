@@ -955,5 +955,11 @@
   // Permite instalar la app y abrirla sin internet
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    // Cuando se publica una versión nueva, recarga una vez para mostrarla.
+    let recargado = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (recargado || !navigator.serviceWorker.controller) return;
+      recargado = true; location.reload();
+    });
   }
 })();
