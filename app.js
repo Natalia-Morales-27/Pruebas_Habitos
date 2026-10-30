@@ -86,9 +86,9 @@
     const m1 = uid(), m2 = uid(), m3 = uid();
     return {
       materias: [
-        { id: m1, nombre: 'Matemáticas Financieras', profesor: 'Ana Gómez', salon: '304', dia: 'Lunes', hora: '08:00' },
-        { id: m2, nombre: 'Programación', profesor: '', salon: '205', dia: 'Martes', hora: '10:00' },
-        { id: m3, nombre: 'Bases de Datos', profesor: '', salon: '401', dia: 'Miércoles', hora: '14:00' },
+        { id: m1, nombre: 'Matemáticas Financieras', profesor: 'Ana Gómez', salon: '304', horarios: [{ dia: 'Lunes', hora: '08:00' }, { dia: 'Miércoles', hora: '08:00' }] },
+        { id: m2, nombre: 'Programación', profesor: '', salon: '205', horarios: [{ dia: 'Martes', hora: '10:00' }] },
+        { id: m3, nombre: 'Bases de Datos', profesor: '', salon: '401', horarios: [{ dia: 'Miércoles', hora: '14:00' }] },
       ],
       tareas: [
         { id: uid(), titulo: 'Taller de Cálculo II', materiaId: m1, fecha: t, desc: '', hecha: false },
@@ -154,6 +154,9 @@
   const materiaNombre = (id) => (data().materias.find((m) => m.id === id) || {}).nombre || 'Sin materia';
   const materiaOptions = (sel) => `<option value="">Selecciona una materia</option>` +
     data().materias.map((m) => `<option value="${m.id}" ${m.id === sel ? 'selected' : ''}>${esc(m.nombre)}</option>`).join('');
+
+  // Días y horas en que se ve una materia (las materias viejas tenían un solo día/hora)
+  const horariosDe = (m) => (m.horarios && m.horarios.length ? m.horarios : [{ dia: m.dia || 'Lunes', hora: m.hora || '08:00' }]);
 
   // ---------- Cálculos ----------
   function pesos(n) {
@@ -582,7 +585,7 @@
         <h2 class="serif" style="font-size:18px;margin:6px 0 16px">SEMESTRE ACTUAL</h2>
         ${ms.map((m) => `<div class="item materia-item">
             <div class="t">${esc(m.nombre)}</div>
-            <div class="s">${esc(m.dia)} • ${hora12(m.hora)}${m.salon ? ' • Salón ' + esc(m.salon) : ''}${m.profesor ? '<br>' + esc(m.profesor) : ''}</div>
+            <div class="s">${horariosDe(m).map((h) => `${esc(h.dia)} • ${hora12(h.hora)}`).join('<br>')}${m.salon ? '<br>Salón ' + esc(m.salon) : ''}${m.profesor ? '<br>' + esc(m.profesor) : ''}</div>
             <div class="acts"><button class="icon-btn edit" data-go="/materias/editar/${m.id}" aria-label="Editar">${ic('edit')}</button>
             <button class="icon-btn" data-del="${m.id}" aria-label="Eliminar">${ic('trash')}</button></div>
           </div>`).join('') || '<div class="empty">Aún no tienes materias.</div>'}
@@ -607,9 +610,28 @@
     };
   };
 
+  // Bloque de un horario (día + hora) dentro del formulario de materia
+  const HORAS = [];
+  for (let h = 1; h <= 12; h++) HORAS.push(`${h}:00`, `${h}:30`);
+  function horarioBlock(h, n) {
+    let [hh, mm] = (h.hora || '08:00').split(':').map(Number);
+    const pm = hh >= 12;
+    const h12 = `${hh % 12 || 12}:${pad(mm)}`;
+    return `<div class="horario" data-h>
+      <div class="horario-head"><b>Horario ${n}</b>${n > 1 ? `<button type="button" class="icon-btn" data-quitar aria-label="Quitar horario">${ic('trash')}</button>` : ''}</div>
+      <label class="label">Día</label>
+      <select class="select" data-dia>${DIAS.map((d) => `<option ${d === h.dia ? 'selected' : ''}>${d}</option>`).join('')}</select>
+      <label class="label">Hora</label>
+      <div class="hora-row">
+        <select class="select" data-hora>${HORAS.map((x) => `<option ${x === h12 ? 'selected' : ''}>${x}</option>`).join('')}</select>
+        <select class="select ampm" data-ampm><option ${pm ? '' : 'selected'}>AM</option><option ${pm ? 'selected' : ''}>PM</option></select>
+      </div>
+    </div>`;
+  }
+
   function materiaForm(m) {
     const isNew = !m;
-    m = m || { nombre: '', profesor: '', salon: '', dia: 'Lunes', hora: '08:00' };
+    m = m || { nombre: '', profesor: '', salon: '', horarios: [{ dia: 'Lunes', hora: '08:00' }] };
     return {
       html: `<div class="screen with-nav">
         ${topbar(isNew ? 'Nueva materia' : 'Editar materia', '/materias')}
@@ -620,20 +642,40 @@
           <input class="input" id="profesor" value="${esc(m.profesor)}" placeholder="Nombre del profesor">
           <label class="label" for="salon">Salón</label>
           <input class="input" id="salon" value="${esc(m.salon)}" placeholder="304">
-          <label class="label" for="dia">Día</label>
-          <select class="select" id="dia">${DIAS.map((d) => `<option ${d === m.dia ? 'selected' : ''}>${d}</option>`).join('')}</select>
-          <label class="label" for="hora">Hora</label>
-          <input class="input" id="hora" type="time" value="${esc(m.hora)}">
+          <div id="horarios">${horariosDe(m).map((h, i) => horarioBlock(h, i + 1)).join('')}</div>
           <div class="error" id="err"></div>
-          <div class="center"><button class="btn small caps" type="submit">${isNew ? 'Guardar' : 'Guardar cambios'}</button></div>
+          <div class="form-btns">
+            <button type="button" class="btn small" id="addH">+ Horario</button>
+            <button type="submit" class="btn small">Guardar</button>
+            <button type="button" class="btn small" data-go="/materias">Cancelar</button>
+          </div>
         </form></div>${nav('inicio')}`,
       mount(root) {
+        const cont = $('#horarios', root);
+        const renumerar = () => $$('[data-h]', cont).forEach((el, i) => {
+          $('.horario-head b', el).textContent = `Horario ${i + 1}`;
+        });
+        const bindQuitar = () => $$('[data-quitar]', cont).forEach((b) => (b.onclick = () => { b.closest('[data-h]').remove(); renumerar(); }));
+        bindQuitar();
+        $('#addH', root).onclick = () => {
+          const n = $$('[data-h]', cont).length + 1;
+          cont.insertAdjacentHTML('beforeend', horarioBlock({ dia: DIAS[Math.min(n - 1, 6)], hora: '08:00' }, n));
+          bindQuitar();
+          cont.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
         $('#f', root).onsubmit = (e) => {
           e.preventDefault();
           const v = (id) => $('#' + id, root).value.trim();
           if (!v('nombre')) return ($('#err', root).textContent = 'Escribe el nombre de la materia.');
-          const obj = { nombre: v('nombre'), profesor: v('profesor'), salon: v('salon'), dia: v('dia'), hora: v('hora') };
-          if (isNew) data().materias.push({ id: uid(), ...obj }); else Object.assign(m, obj);
+          const horarios = $$('[data-h]', cont).map((el) => {
+            let [hh, mm] = $('[data-hora]', el).value.split(':').map(Number);
+            const pm = $('[data-ampm]', el).value === 'PM';
+            hh = (hh % 12) + (pm ? 12 : 0);
+            return { dia: $('[data-dia]', el).value, hora: `${pad(hh)}:${pad(mm)}` };
+          });
+          const obj = { nombre: v('nombre'), profesor: v('profesor'), salon: v('salon'), horarios };
+          if (isNew) data().materias.push({ id: uid(), ...obj });
+          else { Object.assign(m, obj); delete m.dia; delete m.hora; }
           save(); go('/materias', isNew ? 'Materia creada' : 'Materia actualizada');
         };
       },
@@ -827,7 +869,8 @@
     const lunes = addDays(calSel, -dayIndex(sel));
     const dias = Array.from({ length: 7 }, (_, i) => addDays(lunes, i));
     const nombreDia = DIAS[dayIndex(sel)];
-    const clases = data().materias.filter((m) => m.dia === nombreDia).sort((a, b) => a.hora.localeCompare(b.hora));
+    const clases = data().materias.flatMap((m) => horariosDe(m).filter((h) => h.dia === nombreDia).map((h) => ({ ...m, hora: h.hora })))
+      .sort((a, b) => a.hora.localeCompare(b.hora));
     const finClase = (h) => { const [hh, mm] = h.split(':').map(Number); return `${pad(Math.min(23, hh + 2))}:${pad(mm)}`; };
     const tareasDia = data().tareas.filter((t) => !t.hecha && t.fecha === calSel);
     return {

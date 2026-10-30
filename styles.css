@@ -164,6 +164,17 @@ h1, h2, h3 { font-family: 'Lora', Georgia, serif; color: var(--primary); margin:
 .fc-stack i:nth-child(2) { background: var(--sage); border: var(--bw) solid var(--sage-dark); transform: translate(-6px, 6px) rotate(4deg); }
 .fc-stack span { background: var(--bg); border: var(--bw) solid var(--line); transform: translate(6px, -8px) rotate(8deg); display: flex; align-items: center; justify-content: center; text-align: center; padding: 12px 14px; font-size: 11px; letter-spacing: .6px; line-height: 1.35; color: var(--text); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
 
+/* Horarios en el formulario de materia */
+.horario { border: var(--bw) solid var(--line); border-radius: 30px; padding: var(--pad-s) var(--pad-s) 18px; margin-top: 18px; }
+.horario-head { display: flex; align-items: center; justify-content: space-between; color: var(--primary); font-size: var(--fs-s); min-height: 32px; }
+.horario-head .icon-btn svg { width: 20px; height: 20px; }
+.horario .label:first-of-type { margin-top: 6px; }
+.hora-row { display: flex; gap: var(--gap); }
+.hora-row .select { flex: 1; }
+.hora-row .ampm { flex: 0 0 96px; }
+.form-btns { display: flex; gap: var(--gap); justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+.form-btns .btn.small { padding: 11px 18px; }
+
 /* Listas tipo tareas/materias */
 .list-title { font-size: var(--fs-m); color: var(--primary); font-weight: 600; margin: 14px 0 10px; font-family: 'Nunito', sans-serif; }
 .item { display: flex; align-items: center; gap: 12px; border: var(--bw) solid var(--line); border-radius: 999px; padding: 12px 16px; margin-bottom: 12px; }
