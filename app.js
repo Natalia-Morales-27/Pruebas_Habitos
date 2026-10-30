@@ -189,7 +189,8 @@
   }
 
   // ---------- Pomodoro (sigue corriendo aunque cambies de pantalla) ----------
-  const pomo = { minutos: 30, restante: 30 * 60, corriendo: false, fase: 'Estudio', timer: null };
+  // guardado: tiempo de estudio que quedaba al irse a descansar, para retomarlo después
+  const pomo = { minutos: 30, restante: 30 * 60, corriendo: false, fase: 'Estudio', timer: null, guardado: null };
   const fmt = (s) => `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
   function pomoTick() {
     if (pomo.restante > 0) pomo.restante--;
@@ -198,17 +199,23 @@
       const fueEstudio = pomo.fase === 'Estudio';
       if ('vibrate' in navigator) navigator.vibrate([300, 150, 300]);
       toast(fueEstudio ? '¡Tiempo de descanso!' : '¡A estudiar de nuevo!');
-      if (fueEstudio) { pomo.fase = 'Descanso'; pomo.restante = 5 * 60; }
-      else { pomo.fase = 'Estudio'; pomo.restante = pomo.minutos * 60; }
+      if (fueEstudio) { pomo.guardado = null; pomo.fase = 'Descanso'; pomo.restante = 5 * 60; }
+      else volverAEstudiar();
     }
     pomoRefresh();
   }
   function pomoStart() { if (pomo.corriendo) return; pomo.corriendo = true; pomo.timer = setInterval(pomoTick, 1000); }
   function pomoStop() { pomo.corriendo = false; clearInterval(pomo.timer); }
+  // Termina el descanso y retoma el estudio donde quedó (o desde el inicio si ya había terminado)
+  function volverAEstudiar() {
+    pomo.fase = 'Estudio';
+    pomo.restante = pomo.guardado || pomo.minutos * 60;
+    pomo.guardado = null;
+  }
   const pomoWidget = () => `<div class="pomo">
       <div class="phase" data-pomo-phase>${pomo.fase}</div>
       <div class="time"><button data-pomo="menos" aria-label="Menos tiempo">−</button><span data-pomo-time>${fmt(pomo.restante)}</span><button data-pomo="mas" aria-label="Más tiempo">+</button></div>
-      <div class="ctrls"><button class="pill" data-pomo="pausar">Pausar</button><button class="pill" data-pomo="iniciar">Iniciar</button><button class="pill" data-pomo="descansar">Descansar</button></div>
+      <div class="ctrls"><button class="pill" data-pomo="pausar">Pausar</button><button class="pill" data-pomo="iniciar">Iniciar</button><button class="pill" data-pomo="descansar" data-pomo-alt>${pomo.fase === 'Descanso' ? 'Estudiar' : 'Descansar'}</button></div>
     </div>`;
   function bindPomo(root) {
     $$('[data-pomo]', root).forEach((b) => (b.onclick = () => {
@@ -222,13 +229,23 @@
       }
       if (a === 'iniciar') pomoStart();
       if (a === 'pausar') pomoStop();
-      if (a === 'descansar') { pomoStop(); pomo.fase = 'Descanso'; pomo.restante = 5 * 60; pomoStart(); toast('¡Tiempo de descanso!'); }
+      if (a === 'descansar') {
+        pomoStop();
+        if (pomo.fase === 'Descanso') {
+          // Botón "Estudiar": corta el descanso y sigue estudiando
+          volverAEstudiar(); pomoStart(); toast('¡De vuelta a estudiar!');
+        } else {
+          // Botón "Descansar": pausa el estudio, guarda el tiempo y empieza 5 min de descanso
+          pomo.guardado = pomo.restante; pomo.fase = 'Descanso'; pomo.restante = 5 * 60; pomoStart(); toast('¡Tiempo de descanso!');
+        }
+      }
       pomoRefresh();
     }));
   }
   function pomoRefresh() {
     $$('[data-pomo-time]').forEach((el) => (el.textContent = fmt(pomo.restante)));
     $$('[data-pomo-phase]').forEach((el) => (el.textContent = pomo.fase));
+    $$('[data-pomo-alt]').forEach((el) => (el.textContent = pomo.fase === 'Descanso' ? 'Estudiar' : 'Descansar'));
   }
 
   // Permite deslizar una fila horizontal arrastrando con el mouse (en el computador)

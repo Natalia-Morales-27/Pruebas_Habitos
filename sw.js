@@ -1,5 +1,5 @@
 // Guarda los archivos de la app para que abra rápido y funcione sin internet.
-const CACHE = 'habitos-v11';
+const CACHE = 'habitos-v12';
 const FILES = ['./', './index.html', './styles.css', './app.js', './manifest.json', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
