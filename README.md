@@ -15,7 +15,8 @@ agregar a la pantalla de inicio para usarla como una app normal.
 - Pomodoro con iniciar, pausar, descansar y ajuste de tiempo.
 
 Los datos se guardan en el navegador del mismo celular (localStorage). No usa servidor.
-"Continuar con Google" abre una cuenta de demostración, porque una app sin servidor no puede validar cuentas de Google.
+"Continuar con Google" muestra tres cuentas de prueba ya creadas (Camila Torres, Andrés Rojas y Laura Gómez) con datos de ejemplo, porque una app sin servidor no puede validar cuentas reales de Google. Las cuentas creadas con "Regístrate" empiezan vacías.
+En el computador la app se muestra dentro de un marco de celular.
 La app no bloquea capturas ni grabación de pantalla, así que al compartir pantalla todo se ve.
 
 ## Publicarla con GitHub Pages

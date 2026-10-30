@@ -261,12 +261,34 @@
     },
   });
 
-  // "Continuar con Google": cuenta de demostración (una app sin servidor no puede validar con Google)
+  // "Continuar con Google": muestra cuentas de prueba ya creadas
+  // (una app sin servidor no puede validar cuentas reales de Google).
+  const CUENTAS_PRUEBA = [
+    { nombre: 'Camila Torres', email: 'camila.torres@correo.com', color: '#5D0D18' },
+    { nombre: 'Andrés Rojas', email: 'andres.rojas@correo.com', color: '#7E8F89' },
+    { nombre: 'Laura Gómez', email: 'laura.gomez@correo.com', color: '#B07A3B' },
+  ];
   function googleDemo() {
-    const email = 'camila.torres@correo.com';
-    if (!db.users[email]) db.users[email] = { nombre: 'Camila Torres', email, pass: 'demo1234', foto: null, google: true, data: seedData() };
-    db.session = email; save(); touchStreak();
-    go('/inicio', 'Sesión iniciada con la cuenta de demostración');
+    const o = $('#overlay-root');
+    o.innerHTML = `<div class="scrim bottom"><div class="sheet g-sheet" role="dialog" aria-modal="true">
+      <div class="grip"></div>
+      <div class="g-logo"><b style="color:#4285F4">G</b><b style="color:#EA4335">o</b><b style="color:#FBBC05">o</b><b style="color:#4285F4">g</b><b style="color:#34A853">l</b><b style="color:#EA4335">e</b></div>
+      <h2>Elige una cuenta</h2>
+      <p class="center hint" style="margin:-4px 0 8px">para continuar a Hábitos de Estudio</p>
+      ${CUENTAS_PRUEBA.map((c, i) => `<button data-acc="${i}"><span class="g-av" style="background:${c.color}">${esc(c.nombre[0])}</span>
+        <span><b>${esc(c.nombre)}</b><br><small>${esc(c.email)}</small></span></button>`).join('')}
+      <button data-acc="cancel">Cancelar</button>
+    </div></div>`;
+    $('.scrim', o).onclick = (e) => {
+      const b = e.target.closest('[data-acc]');
+      if (!b && !e.target.classList.contains('scrim')) return;
+      closeOverlay();
+      if (!b || b.dataset.acc === 'cancel') return;
+      const c = CUENTAS_PRUEBA[Number(b.dataset.acc)];
+      if (!db.users[c.email]) db.users[c.email] = { nombre: c.nombre, email: c.email, pass: 'prueba123', foto: null, google: true, data: seedData() };
+      db.session = c.email; save(); touchStreak();
+      go('/inicio', `¡Hola, ${c.nombre.split(" ")[0]}!`);
+    };
   }
 
   // ----- Crear cuenta -----
@@ -416,7 +438,10 @@
     root.innerHTML = `<div class="drawer"><nav aria-label="Menú">
       <h2>Hábitos de Estudio</h2>
       ${items.map(([p, i, t]) => `<button data-go="${p}">${ic(i)}${t}</button>`).join('')}
+      <div class="spacer"></div>
+      <button class="drawer-out" id="drawer-out">${ic('logout')}Cerrar sesión</button>
     </nav></div>`;
+    $('#drawer-out', root).onclick = (e) => { e.stopPropagation(); closeOverlay(); db.session = null; save(); go('/login', 'Sesión cerrada'); };
     $('.drawer', root).onclick = (e) => {
       const b = e.target.closest('[data-go]');
       closeOverlay();
@@ -909,7 +934,7 @@
     const v = views[name](arg);
     const app = $('#app');
     app.innerHTML = v.html;
-    window.scrollTo(0, 0);
+    app.scrollTop = 0;
     // Enlaces de navegación y botón "atrás"
     $$('[data-go]', app).forEach((el) => el.addEventListener('click', () => go(el.dataset.go)));
     $$('[data-back]', app).forEach((el) => el.addEventListener('click', () => {

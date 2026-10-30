@@ -24,17 +24,24 @@ body {
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 
-/* Contenedor tipo celular: en computador se ve centrado, en celular ocupa toda la pantalla */
-#app {
+/* Marco de celular: en el celular ocupa toda la pantalla; en el computador se ve como un teléfono.
+   El transform hace que modales, menú, avisos y barra inferior queden dentro del marco. */
+#phone {
   position: relative;
-  max-width: 430px;
-  min-height: 100vh;
-  min-height: 100dvh;
+  transform: translateZ(0);
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
   margin: 0 auto;
   background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 0 40px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+#app { height: 100%; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; overscroll-behavior: contain; }
+@media (min-width: 600px) {
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #E4DCCB; }
+  #phone { box-sizing: content-box; width: 375px; height: min(812px, calc(100vh - 52px)); border: 10px solid #1F1A1A; border-radius: 48px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+  #app { scrollbar-width: none; }
+  #app::-webkit-scrollbar { display: none; }
 }
 
 .screen { flex: 1; display: flex; flex-direction: column; padding: 16px 20px 24px; }
@@ -51,7 +58,7 @@ h1, h2, h3 { font-family: 'Lora', Georgia, serif; color: var(--primary); margin:
 
 /* Encabezado del inicio */
 .home-head { position: sticky; top: 0; z-index: 8; background: var(--bg); display: flex; align-items: center; gap: 10px; padding: 6px 0 12px; border-bottom: 1.5px solid var(--line); margin: 0 -20px 16px; padding-left: 16px; padding-right: 16px; }
-.home-head h1 { font-size: 20px; flex: 1; }
+.home-head h1 { font-size: 19px; flex: 1; white-space: nowrap; }
 .streak { display: inline-flex; align-items: center; gap: 4px; border: 2.5px solid var(--primary); color: var(--primary); border-radius: 999px; padding: 1px 10px 1px 4px; font-size: 18px; }
 .streak svg { width: 22px; height: 22px; }
 .avatar-btn svg { width: 30px; height: 30px; }
@@ -156,11 +163,11 @@ h1, h2, h3 { font-family: 'Lora', Georgia, serif; color: var(--primary); margin:
 
 .fab { position: fixed; bottom: calc(var(--nav-h) + 18px); z-index: 5; width: auto; padding: 12px 22px; }
 .fab-wrap { position: fixed; left: 0; right: 0; bottom: 0; pointer-events: none; display: flex; justify-content: center; }
-.fab-inner { width: 100%; max-width: 430px; position: relative; }
+.fab-inner { width: 100%; position: relative; }
 .fab-inner .fab { pointer-events: auto; position: absolute; right: 20px; }
 
 /* Barra de navegación inferior */
-.nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; height: var(--nav-h); background: var(--bg); border-top: 1.5px solid var(--line); display: flex; justify-content: space-around; align-items: center; z-index: 10; padding-bottom: env(safe-area-inset-bottom); }
+.nav { position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-h); background: var(--bg); border-top: 1.5px solid var(--line); display: flex; justify-content: space-around; align-items: center; z-index: 10; padding-bottom: env(safe-area-inset-bottom); }
 .nav button { background: none; border: 0; color: var(--sage); padding: 10px 20px; }
 .nav button.on { color: var(--primary); }
 .nav svg { width: 30px; height: 30px; }
@@ -188,7 +195,7 @@ h1, h2, h3 { font-family: 'Lora', Georgia, serif; color: var(--primary); margin:
 .modal p { margin: 8px 0 18px; }
 .modal .label { text-align: left; }
 .modal .textarea { min-height: 70px; }
-.sheet { width: 100%; max-width: 430px; background: var(--bg); border-radius: 32px 32px 0 0; padding: 12px 22px 28px; animation: up .2s ease; }
+.sheet { width: 100%; background: var(--bg); border-radius: 32px 32px 0 0; padding: 12px 22px 28px; animation: up .2s ease; }
 .sheet .grip { width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 14px; }
 .sheet h2 { text-align: center; font-size: 18px; margin-bottom: 8px; }
 .sheet button { display: flex; align-items: center; gap: 14px; width: 100%; background: none; border: 0; border-bottom: 1.5px solid var(--line); padding: 16px 4px; text-align: left; }
@@ -198,6 +205,7 @@ h1, h2, h3 { font-family: 'Lora', Georgia, serif; color: var(--primary); margin:
 /* Menú lateral */
 .drawer { position: fixed; inset: 0; z-index: 40; background: var(--scrim); animation: fade .15s; }
 .drawer nav { width: 78%; max-width: 320px; height: 100%; background: var(--bg); padding: 28px 18px; animation: slide .2s ease; display: flex; flex-direction: column; gap: 6px; }
+.drawer .drawer-out { color: var(--primary); border-top: 1.5px solid var(--line); border-radius: 0; padding-top: 16px; }
 .drawer h2 { font-size: 20px; margin: 0 0 14px 6px; }
 .drawer button { display: flex; align-items: center; gap: 14px; background: none; border: 0; padding: 13px 8px; text-align: left; font-weight: 600; border-radius: 16px; }
 .drawer button:active { background: #F3EAD5; }
@@ -261,3 +269,10 @@ h1, h2, h3 { font-family: 'Lora', Georgia, serif; color: var(--primary); margin:
 @keyframes pop { from { transform: scale(.94); opacity: 0 } }
 @keyframes up { from { transform: translateY(24px); opacity: 0 } }
 @keyframes slide { from { transform: translateX(-100%) } }
+
+/* Selector de cuentas de Google */
+.g-sheet .g-logo { text-align: center; font-size: 24px; font-family: 'Nunito', sans-serif; margin-bottom: 6px; }
+.g-sheet h2 { font-family: 'Nunito', sans-serif; color: var(--text); }
+.g-sheet button { align-items: center; }
+.g-sheet small { color: var(--muted); }
+.g-av { width: 38px; height: 38px; border-radius: 50%; color: #fff; display: grid; place-items: center; font-weight: 700; flex: none; }
