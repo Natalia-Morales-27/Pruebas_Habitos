@@ -1,5 +1,7 @@
 # Hábitos de Estudio
 
+**Abrir la app:** https://natalia-morales-27.github.io/Pruebas_Habitos/
+
 App móvil web (PWA) hecha a partir de los mockups de Figma "Mockups APP".
 Se abre desde un enlace en el navegador del celular, sin instalar nada, y se puede
 agregar a la pantalla de inicio para usarla como una app normal.
