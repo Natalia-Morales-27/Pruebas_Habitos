@@ -78,6 +78,9 @@
   const me = () => (db.session && db.users[db.session]) || null;
   const data = () => me().data;
 
+  // Una cuenta nueva empieza vacía; solo la cuenta de demostración trae ejemplos.
+  const emptyData = () => ({ materias: [], tareas: [], flashcards: [], notas: {}, racha: { dias: 1, ultimo: today() } });
+
   function seedData() {
     const t = today();
     const m1 = uid(), m2 = uid(), m3 = uid();
@@ -302,7 +305,7 @@
         if (p1.length < 8) return err('La contraseña debe tener mínimo 8 caracteres.');
         if (p1 !== p2) return err('Las contraseñas no coinciden.');
         if (!$('#acepto', root).checked) return err('Debes aceptar los términos para continuar.');
-        db.users[email] = { nombre, email, pass: p1, foto: null, data: seedData() };
+        db.users[email] = { nombre, email, pass: p1, foto: null, data: emptyData() };
         save();
         go('/login', 'Cuenta creada correctamente');
       };
@@ -367,7 +370,6 @@
     const progreso = d.materias.map((m) => `<div class="progress-item">
         <div class="pl"><span>${esc(m.nombre)}</span><span>${progresoMateria(m.id)}%</span></div>
         <div class="bar"><i style="width:${progresoMateria(m.id)}%"></i></div></div>`).join('');
-    const pend = d.tareas.filter((t) => !t.hecha).length;
     return {
       html: `<div class="screen with-nav">
         <div class="home-head">
@@ -378,12 +380,10 @@
         </div>
         <div class="stat-row">
           <div class="card stat"><h3>Promedio semestre</h3>
-            <div class="big">${prom === null ? '—' : prom.toFixed(1)}<small>/5.0</small></div>
-            <p>${prom === null ? 'Registra tus notas en el simulador' : prom >= 3 ? '¡Vas aprobando, sigue así!' : '¡Tú puedes subir esa nota!'}</p></div>
+            <div class="big">${prom === null ? '0.0' : prom.toFixed(1)}<small>/5.0</small></div>
+            <p>${prom === null ? 'Aún no tienes notas registradas' : prom >= 3 ? '¡Vas aprobando, sigue así!' : '¡Tú puedes subir esa nota!'}</p></div>
           <div class="card stat" data-go="/materias" role="button"><h3># Materias</h3>
             <div class="big">${d.materias.length}</div><p>${d.materias.length ? '¡Wow, eres increíble!' : 'Agrega tu primera materia'}</p></div>
-          <div class="card stat" data-go="/tareas" role="button"><h3>Tareas</h3>
-            <div class="big">${pend}</div><p>${pend ? 'pendientes por hacer' : '¡Todo al día!'}</p></div>
         </div>
         <div class="card mt">
           <h2 class="section-title">Progreso</h2>
@@ -394,10 +394,9 @@
           <div class="method-title">Pomodoro</div>
           ${pomoWidget()}
           <div class="method-title">Flashcards</div>
-          <button class="method-link" data-go="/flashcards"><span>Repasar con flashcards</span>${ic('chevR')}</button>
-          <div class="method-title">Organización</div>
-          <button class="method-link" data-go="/tareas"><span>Mis tareas</span>${ic('chevR')}</button>
-          <button class="method-link" data-go="/materias"><span>Mis materias</span>${ic('chevR')}</button>
+          <button class="fc-stack" data-go="/flashcards" aria-label="Abrir flashcards">
+            <i></i><i></i><span>Escribe una pregunta en un lado y la respuesta en la parte de atrás.<br><br>Toma una tarjeta y responde, ¡confirma tu respuesta mirando el reverso!</span>
+          </button>
         </div>
       </div>${nav('inicio')}`,
       mount(root) {
