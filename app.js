@@ -948,6 +948,10 @@
     if (pendingToast) { toast(pendingToast); pendingToast = null; }
   }
 
+  // Hora real en la barra de estado del marco de celular
+  const sbTime = () => { const d = new Date(); $('#sb-time').textContent = `${d.getHours()}:${pad(d.getMinutes())}`; };
+  sbTime(); setInterval(sbTime, 15000);
+
   window.addEventListener('hashchange', render);
   if (me()) touchStreak();
   render();
