@@ -265,12 +265,12 @@
   // (una app sin servidor no puede validar cuentas reales de Google).
   const CUENTAS_PRUEBA = [
     { nombre: 'Camila Torres', email: 'camila.torres@correo.com', color: '#5D0D18' },
-    { nombre: 'Andrés Rojas', email: 'andres.rojas@correo.com', color: '#7E8F89' },
+    { nombre: 'Andrés Rojas', email: 'andres.rojas@correo.com', color: '#7D8E89' },
     { nombre: 'Laura Gómez', email: 'laura.gomez@correo.com', color: '#B07A3B' },
   ];
   function googleDemo() {
     // Cuentas de prueba + las cuentas que se registraron en este navegador
-    const colores = ['#5D0D18', '#7E8F89', '#B07A3B', '#4A6FA5', '#6B4E8A'];
+    const colores = ['#5D0D18', '#7D8E89', '#B07A3B', '#4A6FA5', '#6B4E8A'];
     const propias = Object.values(db.users)
       .filter((u) => !CUENTAS_PRUEBA.some((c) => c.email === u.email))
       .map((u, i) => ({ nombre: u.nombre, email: u.email, color: colores[(i + 3) % colores.length] }));
